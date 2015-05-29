@@ -19,9 +19,10 @@ def xp; @xp; end
 
 # Defaults configuration
 #
-XP5K::Config[:walltime]   ||= '1:00:00'
-XP5K::Config[:user]       ||= ENV['USER']
-XP5K::Config[:site]       ||= 'rennes'
+XP5K::Config[:walltime]     ||= '1:00:00'
+XP5K::Config[:user]         ||= ENV['USER']
+XP5K::Config[:site]         ||= 'rennes'
+XP5K::Config[:agents_count] ||= 2
 
 
 # Constants
@@ -41,13 +42,13 @@ set :ssh_config, XP5K::Config[:ssh_config] if XP5K::Config[:ssh_config]
 
 # Manage OAR resources
 resources = []
-resources << %{nodes=2}
+resources << %{nodes=#{1 + XP5K::Config[:agents_count]}}
 resources << %{walltime=#{XP5K::Config[:walltime]}}
 
 # Manage roles
 roles = []
 roles << XP5K::Role.new({ :name => 'puppetserver', :size => 1 })
-roles << XP5K::Role.new({ :name => 'agent', :size => 1 })
+roles << XP5K::Role.new({ :name => 'agents', :size => XP5K::Config[:agents_count] })
 
 # Job description
 job_description = {
