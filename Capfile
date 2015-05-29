@@ -82,7 +82,23 @@ role :puppetserver do
 end
 
 role :agents do
-  xp.role_with_name("agent").servers
+  xp.role_with_name("agents").servers
+end
+
+
+# Define the workflow
+#
+before :start, "oar:submit"
+before :start, "kadeploy:submit"
+before :start, "setup:repo"
+before :start, "setup:agents"
+before :start, "setup:puppetserver"
+
+
+# Empty task for the `start` workflow
+#
+desc "Start the experiment"
+task :start do
 end
 
 
@@ -122,7 +138,7 @@ end
 #
 namespace :setup do
   desc "Install Puppet repository"
-  task :repo, :roles => ['puppetserver', 'agents'] do
+  task :repo, :roles => [:puppetserver, :agents] do
     set :user, 'root'
     run 'cd /tmp && http_proxy=http://proxy:3128 https_proxy=http://proxy:3128 wget http://apt.puppetlabs.com/puppetlabs-release-pc1-wheezy.deb'
     run 'dpkg -i /tmp/puppetlabs-release-pc1-wheezy.deb'
@@ -130,7 +146,7 @@ namespace :setup do
   end
 
   desc "Install Puppet agent package"
-  task :agent, :roles => ['puppetserver', 'agents'] do
+  task :agents, :roles => [:puppetserver, :agents] do
     set :user, 'root'
     run 'apt-get -y install puppet-agent'
   end
