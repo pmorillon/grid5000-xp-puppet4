@@ -157,3 +157,40 @@ namespace :setup do
     run 'apt-get -y install puppetserver'
   end
 end
+
+
+# Tasks for open a shell on nodes
+#
+namespace :ssh do
+
+  desc "ssh on the puppetserver node"
+  task :puppetserver do
+    fork_exec('ssh', SSH_CONFIGFILE_OPT.split(" "), 'root@' + serversForCapRoles('puppetserver').first)
+  end
+
+  desc "ssh on the first agent"
+  task :agent do
+    fork_exec('ssh', SSH_CONFIGFILE_OPT.split(" "), 'root@' + xp.role_with_name('agents').servers.first)
+  end
+
+end
+
+
+# List servers from capistrano roles
+#
+def serversForCapRoles(roles)
+  find_servers(:roles => roles).collect { |x| x.host }
+end
+
+
+# Fork the execution of a command. Used to execute ssh on deployed nodes.
+#
+def fork_exec(command, *args)
+  # Remove empty args
+  args.select! { |arg| arg != "" }
+  args.flatten!
+  pid = fork do
+    Kernel.exec(command, *args)
+  end
+  Process.wait(pid)
+end
